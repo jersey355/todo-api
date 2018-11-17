@@ -4,8 +4,32 @@ const request = require('supertest');
 const { app } = require('../server');
 const { Task } = require('../models/Task');
 
+const testTasks = [
+    { text: 'First task' },
+    { text: 'Second task' },
+    { text: 'Third task' }
+];
+
 beforeEach((done) => {
-    Task.deleteMany({}).then(() => done());
+    Task.deleteMany({})
+        .then(() => {
+            return Task.insertMany(testTasks);
+        })
+        .then(() => done());
+});
+
+describe('GET /tasks', () => {
+
+    it('Should return a list of tasks', (done) => {
+        request(app)
+            .get('/tasks')
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.tasks.length).toBe(3);
+            })
+            .end(done);
+    });
+
 });
 
 describe('PUT /tasks', () => {
@@ -26,7 +50,7 @@ describe('PUT /tasks', () => {
                     return done(err);
                 }
 
-                Task.find().then((tasks) => {
+                Task.find({ text }).then((tasks) => {
                     expect(tasks.length).toBe(1);
                     expect(tasks[0].text).toBe(text);
                     done();
@@ -48,7 +72,7 @@ describe('PUT /tasks', () => {
                 }
 
                 Task.find().then((tasks) => {
-                    expect(tasks.length).toBe(0);
+                    expect(tasks.length).toBe(3);
                     done();
                 }).catch((e) => done(e));
 
