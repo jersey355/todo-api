@@ -8,10 +8,10 @@ app.use(parser.json());
 
 app.put('/tasks', (req, res) => {
     var newTask = req.body;
-    var result = task.create(newTask.text, newTask.completed, newTask.completedAt, (doc) => {
+    task.create(newTask.text, newTask.completed, newTask.completedAt, (doc) => {
         res.send(doc);
     }, (error) => {
-        res.send(400, error);
+        res.status(400).send(error);
     });
 });
 

@@ -16,18 +16,17 @@ var User = mongoose.model('User', {
     }
 });
 
-var create = (name, email) => {
+var create = (name, email, onSuccess, onError) => {
 
     var user = new User({ name, email });
     user.save().then((doc) => {
-        return (doc);
+        onSuccess(doc);
     }, (e) => {
-        throw new Error(e.message);
+        onError(e);
     });
 
 };
 
 module.exports = {
-    //User,
     create
 };
