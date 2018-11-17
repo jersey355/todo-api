@@ -29,5 +29,6 @@ function create(text, completed, completedAt, onSuccess, onError) {
 };
 
 module.exports = {
+    Task,
     create
 };

@@ -28,5 +28,6 @@ var create = (name, email, onSuccess, onError) => {
 };
 
 module.exports = {
+    User,
     create
 };
