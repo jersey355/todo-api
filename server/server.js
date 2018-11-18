@@ -1,7 +1,9 @@
 const express = require('express');
 const parser = require('body-parser');
 const task = require('./models/task');
-const user = require('./models/user');
+//const user = require('./models/user');
+
+const port = process.env.PORT || 3000;
 
 var app = express();
 app.use(parser.json());
@@ -30,8 +32,8 @@ app.put('/tasks', (req, res) => {
 });
 
 if (!module.parent) {
-    app.listen(3000, () => {
-        console.log('Listening on port 3000 ...');
+    app.listen(port, () => {
+        console.log(`Listening on port [${port}] ...`);
     });
 }
 
