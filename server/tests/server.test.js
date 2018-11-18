@@ -2,7 +2,7 @@ const expect = require('expect');
 const request = require('supertest');
 
 const { app } = require('../server');
-const { Task } = require('../models/Task');
+const { Task } = require('../models/task');
 
 const testTasks = [
     { text: 'First task' },
