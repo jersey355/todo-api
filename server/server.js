@@ -13,6 +13,14 @@ app.get('/tasks', (req, res) => {
     );
 });
 
+app.get('/tasks/:id', (req, res) => {
+    task.findById(req.params.id,
+        (tasks) => res.send(tasks),
+        () => res.status(404).send(`ID [${req.params.id}] not found!`),
+        (error) => res.status(400).send(error)
+    );
+});
+
 app.put('/tasks', (req, res) => {
     var newTask = req.body;
     task.create(newTask.text, newTask.completed, newTask.completedAt,

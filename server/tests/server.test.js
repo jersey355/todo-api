@@ -1,3 +1,4 @@
+const { ObjectID } = require('mongodb');
 const expect = require('expect');
 const request = require('supertest');
 
@@ -27,6 +28,41 @@ describe('GET /tasks', () => {
             .expect((res) => {
                 expect(res.body.tasks.length).toBe(3);
             })
+            .end(done);
+    });
+
+    it('Should find a task by ID', (done) => {
+
+        var id;
+
+        Task.findOne({})
+            .then((task) => {
+
+                id = task._id.toString();
+                expect(id.length).toBeGreaterThan(0);
+
+                request(app)
+                    .get(`/tasks/${id}`)
+                    .expect(200)
+                    .expect((res) => {
+                        expect(res.body.text.length).toBeGreaterThan(0);
+                    })
+                    .end(done);
+            });
+
+    });
+
+    it('Should return 404', (done) => {
+        request(app)
+            .get('/tasks/9bef8b6998d50e2d56d73625')
+            .expect(404)
+            .end(done);
+    });
+
+    it('Should return 400', (done) => {
+        request(app)
+            .get('/tasks/123')
+            .expect(400)
             .end(done);
     });
 

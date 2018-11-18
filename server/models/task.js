@@ -1,3 +1,5 @@
+const { ObjectID } = require('mongodb');
+
 var { mongoose } = require('../db/mongoose');
 
 var Task = mongoose.model('Task', {
@@ -27,7 +29,27 @@ var list = (onSuccess, onError) => {
 
 };
 
-function create(text, completed, completedAt, onSuccess, onError) {
+var findById = (id, onSuccess, onNotFound, onError) => {
+
+    if (!ObjectID.isValid(id)) {
+        return onError({ message: `ID [${id}] is invalid!` });
+    }
+
+    Task.findById(id).then((task) => {
+
+        if (task) {
+            onSuccess(task);
+        } else {
+            onNotFound();
+        }
+
+    }, (e) => {
+        onError(e);
+    });
+
+};
+
+var create = (text, completed, completedAt, onSuccess, onError) => {
 
     var task = new Task({ text, completed, completedAt });
     task.save().then((doc) => {
@@ -41,5 +63,6 @@ function create(text, completed, completedAt, onSuccess, onError) {
 module.exports = {
     Task,
     list,
+    findById,
     create
 };
