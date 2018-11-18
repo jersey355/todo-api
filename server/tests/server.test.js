@@ -6,9 +6,9 @@ const { app } = require('../server');
 const { Task } = require('../models/task');
 
 const testTasks = [
-    { text: 'First task' },
-    { text: 'Second task' },
-    { text: 'Third task' }
+    { _id: new ObjectID(), text: 'First task' },
+    { _id: new ObjectID(), text: 'Second task' },
+    { _id: new ObjectID(), text: 'Third task' }
 ];
 
 beforeEach((done) => {
@@ -32,24 +32,13 @@ describe('GET /tasks', () => {
     });
 
     it('Should find a task by ID', (done) => {
-
-        var id;
-
-        Task.findOne({})
-            .then((task) => {
-
-                id = task._id.toString();
-                expect(id.length).toBeGreaterThan(0);
-
-                request(app)
-                    .get(`/tasks/${id}`)
-                    .expect(200)
-                    .expect((res) => {
-                        expect(res.body.text.length).toBeGreaterThan(0);
-                    })
-                    .end(done);
-            });
-
+        request(app)
+            .get(`/tasks/${testTasks[0]._id.toHexString()}`)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.text).toBe(testTasks[0].text);
+            })
+            .end(done);
     });
 
     it('Should return 404', (done) => {
