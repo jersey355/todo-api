@@ -8,7 +8,7 @@ const { Task } = require('../models/task');
 const testTasks = [
     { _id: new ObjectID(), text: 'First task' },
     { _id: new ObjectID(), text: 'Second task' },
-    { _id: new ObjectID(), text: 'Third task' }
+    { _id: new ObjectID(), text: 'Third task', completed: true, completedAt: 333 }
 ];
 
 beforeEach((done) => {
@@ -115,6 +115,53 @@ describe('DELETE /tasks', () => {
             .expect(200)
             .expect((res) => {
                 expect(res.body.task._id).toBe(id);
+            })
+            .end(done);
+    });
+
+    it('Should return 404', (done) => {
+        request(app)
+            .delete('/tasks/9bef8b6998d50e2d56d73625')
+            .expect(404)
+            .end(done);
+    });
+
+    it('Should return 400', (done) => {
+        request(app)
+            .delete('/tasks/123')
+            .expect(400)
+            .end(done);
+    });
+
+});
+
+describe('PATCH /tasks', () => {
+
+    it('Should set task to completed', (done) => {
+        var id = testTasks[0]._id.toHexString();
+        var text = 'Make some widgets';
+        request(app)
+            .patch(`/tasks/${id}`)
+            .send({ completed: true, text })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.task.text).toBe(text);
+                expect(res.body.task.completed).toBe(true);
+                expect(res.body.task.completedAt).toBeA('number');
+            })
+            .end(done);
+    });
+
+    it('Should clear task completed flag', (done) => {
+        var id = testTasks[2]._id.toHexString();
+        var text = 'Make some widgets';
+        request(app)
+            .patch(`/tasks/${id}`)
+            .send({ completed: false })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.task.completed).toBe(false);
+                expect(res.body.task.completedAt).toBeNull;
             })
             .end(done);
     });
