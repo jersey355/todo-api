@@ -109,11 +109,12 @@ describe('POST /tasks', () => {
 describe('DELETE /tasks', () => {
 
     it('Should delete a task by ID', (done) => {
+        var id = testTasks[0]._id.toHexString();
         request(app)
-            .delete(`/tasks/${testTasks[0]._id.toHexString()}`)
+            .delete(`/tasks/${id}`)
             .expect(200)
             .expect((res) => {
-                expect(res.body.task.text).toBe(testTasks[0].text);
+                expect(res.body.task._id).toBe(id);
             })
             .end(done);
     });
