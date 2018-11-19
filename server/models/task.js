@@ -20,13 +20,11 @@ var Task = mongoose.model('Task', {
 });
 
 var list = (onSuccess, onError) => {
-
     Task.find().then((tasks) => {
         onSuccess(tasks);
     }, (e) => {
         onError(e);
     });
-
 };
 
 var findById = (id, onSuccess, onNotFound, onError) => {
@@ -36,13 +34,11 @@ var findById = (id, onSuccess, onNotFound, onError) => {
     }
 
     Task.findById(id).then((task) => {
-
         if (task) {
             onSuccess(task);
         } else {
             onNotFound();
         }
-
     }, (e) => {
         onError(e);
     });
@@ -50,10 +46,26 @@ var findById = (id, onSuccess, onNotFound, onError) => {
 };
 
 var create = (text, completed, completedAt, onSuccess, onError) => {
-
     var task = new Task({ text, completed, completedAt });
     task.save().then((doc) => {
         onSuccess(doc);
+    }, (e) => {
+        onError(e);
+    });
+};
+
+var deleteById = (id, onSuccess, onNotFound, onError) => {
+
+    if (!ObjectID.isValid(id)) {
+        return onError({ message: `ID [${id}] is invalid!` });
+    }
+
+    Task.findByIdAndDelete(id).then((task) => {
+        if (task) {
+            onSuccess(task);
+        } else {
+            onNotFound();
+        }
     }, (e) => {
         onError(e);
     });
@@ -64,5 +76,6 @@ module.exports = {
     Task,
     list,
     findById,
-    create
+    create,
+    deleteById
 };

@@ -16,17 +16,27 @@ app.get('/tasks', (req, res) => {
 });
 
 app.get('/tasks/:id', (req, res) => {
-    task.findById(req.params.id,
-        (tasks) => res.send(tasks),
-        () => res.status(404).send(`ID [${req.params.id}] not found!`),
+    var id = req.params.id;
+    task.findById(id,
+        (task) => res.send(task),
+        () => res.status(404).send(`ID [${id}] not found!`),
         (error) => res.status(400).send(error)
     );
 });
 
-app.put('/tasks', (req, res) => {
+app.post('/tasks', (req, res) => {
     var newTask = req.body;
     task.create(newTask.text, newTask.completed, newTask.completedAt,
         (doc) => res.send(doc),
+        (error) => res.status(400).send(error)
+    );
+});
+
+app.delete('/tasks/:id', (req, res) => {
+    var id = req.params.id;
+    task.deleteById(id,
+        (task) => res.send(task),
+        () => res.status(404).send(`ID [${id}] not found!`),
         (error) => res.status(400).send(error)
     );
 });

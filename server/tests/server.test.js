@@ -57,13 +57,13 @@ describe('GET /tasks', () => {
 
 });
 
-describe('PUT /tasks', () => {
+describe('POST /tasks', () => {
 
     it('Should create a new task', (done) => {
         var text = 'Test todo text';
 
         request(app)
-            .put('/tasks')
+            .post('/tasks')
             .send({ text })
             .expect(200)
             .expect((res) => {
@@ -87,7 +87,7 @@ describe('PUT /tasks', () => {
 
     it('Should not create task with invalid request data', (done) => {
         request(app)
-            .put('/tasks')
+            .post('/tasks')
             .send({})
             .expect(400)
             .end((err, res) => {
@@ -102,6 +102,34 @@ describe('PUT /tasks', () => {
                 }).catch((e) => done(e));
 
             });
+    });
+
+});
+
+describe('DELETE /tasks', () => {
+
+    it('Should delete a task by ID', (done) => {
+        request(app)
+            .delete(`/tasks/${testTasks[0]._id.toHexString()}`)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.text).toBe(testTasks[0].text);
+            })
+            .end(done);
+    });
+
+    it('Should return 404', (done) => {
+        request(app)
+            .delete('/tasks/9bef8b6998d50e2d56d73625')
+            .expect(404)
+            .end(done);
+    });
+
+    it('Should return 400', (done) => {
+        request(app)
+            .delete('/tasks/123')
+            .expect(400)
+            .end(done);
     });
 
 });
