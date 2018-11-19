@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const { ObjectID } = require('mongodb');
 
 var { mongoose } = require('../db/mongoose');
@@ -33,7 +34,7 @@ var findById = (id, onSuccess, onNotFound, onError) => {
         return onError({ message: `ID [${id}] is invalid!` });
     }
 
-    Task.findById(id).then((task) => {
+    Task.findOne({ _id: id }).then((task) => {
         if (task) {
             onSuccess(task);
         } else {
@@ -60,7 +61,32 @@ var deleteById = (id, onSuccess, onNotFound, onError) => {
         return onError({ message: `ID [${id}] is invalid!` });
     }
 
-    Task.findByIdAndDelete(id).then((task) => {
+    Task.findOneAndDelete({ _id: id }).then((task) => {
+        if (task) {
+            onSuccess(task);
+        } else {
+            onNotFound();
+        }
+    }, (e) => {
+        onError(e);
+    });
+
+};
+
+var updateById = (id, body, onSuccess, onNotFound, onError) => {
+
+    if (!ObjectID.isValid(id)) {
+        return onError({ message: `ID [${id}] is invalid!` });
+    }
+
+    if (_.isBoolean(body.completed) && body.completed) {
+        body.completedAt = new Date().getTime();
+    } else {
+        body.completed = false;
+        body.completedAt = null;
+    }
+
+    Task.findOneAndUpdate({ _id: id }, { $set: body }, { new: true }).then((task) => {
         if (task) {
             onSuccess(task);
         } else {
@@ -77,5 +103,6 @@ module.exports = {
     list,
     findById,
     create,
-    deleteById
+    deleteById,
+    updateById
 };

@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const express = require('express');
 const parser = require('body-parser');
 const Task = require('./models/task');
@@ -35,6 +36,16 @@ app.post('/tasks', (req, res) => {
 app.delete('/tasks/:id', (req, res) => {
     var id = req.params.id;
     Task.deleteById(id,
+        (task) => res.send({ task }),
+        () => res.status(404).send(`ID [${id}] not found!`),
+        (error) => res.status(400).send(error)
+    );
+});
+
+app.patch('/tasks/:id', (req, res) => {
+    var id = req.params.id;
+    var body = _.pick(req.body, ['text', 'completed']);
+    Task.updateById(id, body,
         (task) => res.send({ task }),
         () => res.status(404).send(`ID [${id}] not found!`),
         (error) => res.status(400).send(error)
