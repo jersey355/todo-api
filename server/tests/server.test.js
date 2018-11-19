@@ -36,7 +36,7 @@ describe('GET /tasks', () => {
             .get(`/tasks/${testTasks[0]._id.toHexString()}`)
             .expect(200)
             .expect((res) => {
-                expect(res.body.text).toBe(testTasks[0].text);
+                expect(res.body.task.text).toBe(testTasks[0].text);
             })
             .end(done);
     });
@@ -67,7 +67,7 @@ describe('POST /tasks', () => {
             .send({ text })
             .expect(200)
             .expect((res) => {
-                expect(res.body.text).toBe(text);
+                expect(res.body.task.text).toBe(text);
             })
             .end((err, res) => {
 
@@ -113,7 +113,7 @@ describe('DELETE /tasks', () => {
             .delete(`/tasks/${testTasks[0]._id.toHexString()}`)
             .expect(200)
             .expect((res) => {
-                expect(res.body.text).toBe(testTasks[0].text);
+                expect(res.body.task.text).toBe(testTasks[0].text);
             })
             .end(done);
     });
