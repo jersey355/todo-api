@@ -4,12 +4,24 @@ const _ = require('lodash');
 const express = require('express');
 const parser = require('body-parser');
 const Task = require('./models/task');
-//const user = require('./models/user');
+const User = require('./models/user');
 
 const port = process.env.PORT;
 
 var app = express();
 app.use(parser.json());
+
+// <<<<<<<<<< USER ROUTES >>>>>>>>>>
+
+app.post('/users', (req, res) => {
+    var userData = _.pick(req.body, ['email', 'password']);
+    User.create(userData,
+        (user) => res.send({ user }),
+        (error) => res.status(400).send(error)
+    );
+});
+
+// <<<<<<<<<< TASK ROUTES >>>>>>>>>>
 
 app.get('/tasks', (req, res) => {
     Task.list(
@@ -28,8 +40,8 @@ app.get('/tasks/:id', (req, res) => {
 });
 
 app.post('/tasks', (req, res) => {
-    var newTask = req.body;
-    Task.create(newTask.text, newTask.completed, newTask.completedAt,
+    var taskData = _.pick(req.body, ['text', 'completed', 'completedAt']);
+    Task.create(taskData,
         (task) => res.send({ task }),
         (error) => res.status(400).send(error)
     );

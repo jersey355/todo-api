@@ -1,7 +1,6 @@
 const _ = require('lodash');
 const { ObjectID } = require('mongodb');
-
-var { mongoose } = require('../db/mongoose');
+const { mongoose } = require('../db/mongoose');
 
 var Task = mongoose.model('Task', {
     text: {
@@ -46,8 +45,8 @@ var findById = (id, onSuccess, onNotFound, onError) => {
 
 };
 
-var create = (text, completed, completedAt, onSuccess, onError) => {
-    var task = new Task({ text, completed, completedAt });
+var create = (taskData, onSuccess, onError) => {
+    var task = new Task(taskData);
     task.save().then((doc) => {
         onSuccess(doc);
     }, (e) => {
