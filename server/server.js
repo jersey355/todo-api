@@ -3,8 +3,8 @@ require('./config/config');
 const _ = require('lodash');
 const express = require('express');
 const parser = require('body-parser');
-const Task = require('./models/task');
-const User = require('./models/user');
+const taskService = require('./services/task-service');
+const userService = require('./services/user-service');
 
 const port = process.env.PORT;
 
@@ -15,7 +15,7 @@ app.use(parser.json());
 
 app.post('/users', (req, res) => {
     var userData = _.pick(req.body, ['email', 'password']);
-    User.create(userData,
+    userService.create(userData,
         (user) => res.send({ user }),
         (error) => res.status(400).send(error)
     );
@@ -24,7 +24,7 @@ app.post('/users', (req, res) => {
 // <<<<<<<<<< TASK ROUTES >>>>>>>>>>
 
 app.get('/tasks', (req, res) => {
-    Task.list(
+    taskService.list(
         (tasks) => res.send({ tasks }),
         (error) => res.status(400).send(error)
     );
@@ -32,7 +32,7 @@ app.get('/tasks', (req, res) => {
 
 app.get('/tasks/:id', (req, res) => {
     var id = req.params.id;
-    Task.findById(id,
+    taskService.findById(id,
         (task) => res.send({ task }),
         () => res.status(404).send(`ID [${id}] not found!`),
         (error) => res.status(400).send(error)
@@ -41,7 +41,7 @@ app.get('/tasks/:id', (req, res) => {
 
 app.post('/tasks', (req, res) => {
     var taskData = _.pick(req.body, ['text', 'completed', 'completedAt']);
-    Task.create(taskData,
+    taskService.create(taskData,
         (task) => res.send({ task }),
         (error) => res.status(400).send(error)
     );
@@ -49,7 +49,7 @@ app.post('/tasks', (req, res) => {
 
 app.delete('/tasks/:id', (req, res) => {
     var id = req.params.id;
-    Task.deleteById(id,
+    taskService.deleteById(id,
         (task) => res.send({ task }),
         () => res.status(404).send(`ID [${id}] not found!`),
         (error) => res.status(400).send(error)
@@ -59,7 +59,7 @@ app.delete('/tasks/:id', (req, res) => {
 app.patch('/tasks/:id', (req, res) => {
     var id = req.params.id;
     var body = _.pick(req.body, ['text', 'completed']);
-    Task.updateById(id, body,
+    taskService.updateById(id, body,
         (task) => res.send({ task }),
         () => res.status(404).send(`ID [${id}] not found!`),
         (error) => res.status(400).send(error)
