@@ -1,6 +1,6 @@
 const { User } = require('../models/user');
 
-var create = (userData, onSuccess, onError) => {
+var createUser = (userData, onSuccess, onError) => {
     var user = new User(userData);
     user.save().then((doc) => {
         onSuccess(doc);
@@ -10,5 +10,5 @@ var create = (userData, onSuccess, onError) => {
 };
 
 module.exports = {
-    create
+    createUser
 };

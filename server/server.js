@@ -15,7 +15,7 @@ app.use(parser.json());
 
 app.post('/users', (req, res) => {
     var userData = _.pick(req.body, ['email', 'password']);
-    userService.create(userData,
+    userService.createUser(userData,
         (user) => res.send({ user }),
         (error) => res.status(400).send(error)
     );
@@ -24,7 +24,7 @@ app.post('/users', (req, res) => {
 // <<<<<<<<<< TASK ROUTES >>>>>>>>>>
 
 app.get('/tasks', (req, res) => {
-    taskService.list(
+    taskService.listTasks(
         (tasks) => res.send({ tasks }),
         (error) => res.status(400).send(error)
     );
@@ -32,7 +32,7 @@ app.get('/tasks', (req, res) => {
 
 app.get('/tasks/:id', (req, res) => {
     var id = req.params.id;
-    taskService.findById(id,
+    taskService.findTask(id,
         (task) => res.send({ task }),
         () => res.status(404).send(`ID [${id}] not found!`),
         (error) => res.status(400).send(error)
@@ -41,7 +41,7 @@ app.get('/tasks/:id', (req, res) => {
 
 app.post('/tasks', (req, res) => {
     var taskData = _.pick(req.body, ['text', 'completed', 'completedAt']);
-    taskService.create(taskData,
+    taskService.createTask(taskData,
         (task) => res.send({ task }),
         (error) => res.status(400).send(error)
     );
@@ -49,7 +49,7 @@ app.post('/tasks', (req, res) => {
 
 app.delete('/tasks/:id', (req, res) => {
     var id = req.params.id;
-    taskService.deleteById(id,
+    taskService.deleteTask(id,
         (task) => res.send({ task }),
         () => res.status(404).send(`ID [${id}] not found!`),
         (error) => res.status(400).send(error)
@@ -59,7 +59,7 @@ app.delete('/tasks/:id', (req, res) => {
 app.patch('/tasks/:id', (req, res) => {
     var id = req.params.id;
     var body = _.pick(req.body, ['text', 'completed']);
-    taskService.updateById(id, body,
+    taskService.updateTask(id, body,
         (task) => res.send({ task }),
         () => res.status(404).send(`ID [${id}] not found!`),
         (error) => res.status(400).send(error)
