@@ -16,7 +16,7 @@ app.use(parser.json());
 app.post('/users', (req, res) => {
     var userData = _.pick(req.body, ['email', 'password']);
     userService.createUser(userData,
-        (user) => res.send({ user }),
+        (user, token) => res.header('x-auth', token).send({ user }),
         (error) => res.status(400).send(error)
     );
 });
