@@ -5,6 +5,7 @@ const express = require('express');
 const parser = require('body-parser');
 const taskService = require('./services/task-service');
 const userService = require('./services/user-service');
+const { authenticate } = require('./middleware/auth');
 
 const port = process.env.PORT;
 
@@ -19,6 +20,10 @@ app.post('/users', (req, res) => {
         (user, token) => res.header('x-auth', token).send({ user }),
         (error) => res.status(400).send(error)
     );
+});
+
+app.get('/users/me', authenticate, (req, res) => {
+    res.send(req.user);
 });
 
 // <<<<<<<<<< TASK ROUTES >>>>>>>>>>

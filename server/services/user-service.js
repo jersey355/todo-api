@@ -11,6 +11,19 @@ var createUser = (userData, onSuccess, onError) => {
     });
 };
 
+var findByToken = (token, onSuccess, onError) => {
+    User.findByToken(token).then((user) => {
+        if (!user) {
+            return Promise.reject('User not found!');
+        }
+        onSuccess(user);
+    }).catch((e) => {
+        onError(e);
+    });
+
+};
+
 module.exports = {
-    createUser
+    createUser,
+    findByToken
 };
