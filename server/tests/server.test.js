@@ -1,22 +1,87 @@
-const { ObjectID } = require('mongodb');
 const expect = require('expect');
 const request = require('supertest');
 
 const { app } = require('../server');
+const { users, tasks, populateUsers, populateTasks } = require('./seed/seed');
 const { Task } = require('../models/task');
 
-const testTasks = [
-    { _id: new ObjectID(), text: 'First task' },
-    { _id: new ObjectID(), text: 'Second task' },
-    { _id: new ObjectID(), text: 'Third task', completed: true, completedAt: 333 }
-];
+before(populateUsers);
+beforeEach(populateTasks);
 
-beforeEach((done) => {
-    Task.deleteMany({})
-        .then(() => {
-            return Task.insertMany(testTasks);
-        })
-        .then(() => done());
+describe('GET /users/me', () => {
+
+    it('Should return the user \"me\"', (done) => {
+        request(app)
+            .get('/users/me')
+            .set('x-auth', users[0].tokens[0].token)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body._id).toBe(users[0]._id.toHexString());
+                expect(res.body.email).toBe(users[0].email);
+            })
+            .end(done);
+    });
+
+    it('Should return 401', (done) => {
+        request(app)
+            .get('/users/me')
+            .expect(401)
+            .expect((res) => {
+                expect(res.body).toEqual({});
+            })
+            .end(done);
+    });
+
+});
+
+describe('POST /users', () => {
+
+    it('Should create a new user', (done) => {
+
+        var email = 'john.doe@foo.com';
+        var password = 'password123!';
+
+        request(app)
+            .post('/users')
+            .send({ email, password })
+            .expect(200)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toExist();
+                expect(res.body.user._id).toExist();
+                expect(res.body.user.email).toBe(email);
+            })
+            .end(done);
+
+    });
+
+    it('Should return validation errors on invalid email', (done) => {
+
+        var email = 'john.doe'; // invalid email address
+
+        request(app)
+            .post('/users')
+            .send({ email, password: 'password123!' })
+            .expect(400)
+            .expect((res) => {
+                expect(res.body.name).toBe("ValidationError");
+                expect(res.body.message).toBe(`User validation failed: email: ${email} is not a valid email!`);
+            })
+            .end(done);
+
+    });
+
+    it('Should not create a new user if email already exists', (done) => {
+        request(app)
+            .post('/users')
+            .send({ email: 'john.doe@foo.com', password: 'password123!' })
+            .expect(400)
+            .expect((res) => {
+                expect(res.body.name).toBe("MongoError");
+                expect(res.body.code).toBe(11000); // duplicate error code
+            })
+            .end(done);
+    });
+
 });
 
 describe('GET /tasks', () => {
@@ -33,10 +98,10 @@ describe('GET /tasks', () => {
 
     it('Should find a task by ID', (done) => {
         request(app)
-            .get(`/tasks/${testTasks[0]._id.toHexString()}`)
+            .get(`/tasks/${tasks[0]._id.toHexString()}`)
             .expect(200)
             .expect((res) => {
-                expect(res.body.task.text).toBe(testTasks[0].text);
+                expect(res.body.task.text).toBe(tasks[0].text);
             })
             .end(done);
     });
@@ -109,7 +174,7 @@ describe('POST /tasks', () => {
 describe('DELETE /tasks', () => {
 
     it('Should delete a task by ID', (done) => {
-        var id = testTasks[0]._id.toHexString();
+        var id = tasks[0]._id.toHexString();
         request(app)
             .delete(`/tasks/${id}`)
             .expect(200)
@@ -138,7 +203,7 @@ describe('DELETE /tasks', () => {
 describe('PATCH /tasks', () => {
 
     it('Should set task to completed', (done) => {
-        var id = testTasks[0]._id.toHexString();
+        var id = tasks[0]._id.toHexString();
         var text = 'Make some widgets';
         request(app)
             .patch(`/tasks/${id}`)
@@ -153,7 +218,7 @@ describe('PATCH /tasks', () => {
     });
 
     it('Should clear task completed flag', (done) => {
-        var id = testTasks[2]._id.toHexString();
+        var id = tasks[2]._id.toHexString();
         var text = 'Make some widgets';
         request(app)
             .patch(`/tasks/${id}`)
