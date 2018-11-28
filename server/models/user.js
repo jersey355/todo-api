@@ -65,6 +65,21 @@ UserSchema.statics.findByToken = function (token) {
 
 };
 
+UserSchema.statics.findByEmail = function (email) {
+
+    var User = this;
+    return User.findOne({ email }).then((user) => {
+        if (user) {
+            return new Promise((resolve, reject) => {
+                resolve(user);
+            });
+        } else {
+            return Promise.reject();
+        }
+    });
+
+}
+
 UserSchema.pre('save', function (next) {
 
     var user = this;

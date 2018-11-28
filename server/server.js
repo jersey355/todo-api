@@ -22,6 +22,14 @@ app.post('/users', (req, res) => {
     );
 });
 
+app.post('/users/login', (req, res) => {
+    var credentials = _.pick(req.body, ['email', 'password']);
+    userService.loginUser(credentials,
+        (user, token) => res.header('x-auth', token).send({ user }),
+        (error) => res.status(400).send(error)
+    );
+});
+
 app.get('/users/me', authenticate, (req, res) => {
     res.send(req.user);
 });
