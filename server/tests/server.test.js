@@ -84,6 +84,38 @@ describe('POST /users', () => {
 
 });
 
+describe('POST /users/logn', () => {
+
+    it('Should receive a token after on successful login', (done) => {
+        var email = users[1].email;
+        var password = users[1].password;
+        request(app)
+            .post('/users/login')
+            .send({ email, password })
+            .expect(200)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toExist();
+                expect(res.body.user._id).toExist();
+                expect(res.body.user.email).toBe(email);
+            })
+            .end(done);
+    });
+
+    it('Should receive an error on login failure', (done) => {
+        var email = users[1].email;
+        request(app)
+            .post('/users/login')
+            .send({ email, password: `${users[1].password}NOT!` })
+            .expect(400)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toNotExist();
+                expect(res.body.message).toBe('Password mismatch');
+            })
+            .end(done);
+    });
+
+});
+
 describe('GET /tasks', () => {
 
     it('Should return a list of tasks', (done) => {

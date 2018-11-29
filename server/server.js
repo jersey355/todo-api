@@ -15,9 +15,12 @@ app.use(parser.json());
 // <<<<<<<<<< USER ROUTES >>>>>>>>>>
 
 app.post('/users', (req, res) => {
-    var userData = _.pick(req.body, ['email', 'password']);
-    userService.createUser(userData,
-        (user, token) => res.header('x-auth', token).send({ user }),
+    var credentials = _.pick(req.body, ['email', 'password']);
+    userService.createUser(credentials,
+        (user, token) => {
+            res.setHeader('x-auth', token);
+            res.send({ user });
+        },
         (error) => res.status(400).send(error)
     );
 });

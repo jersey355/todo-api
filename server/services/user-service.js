@@ -1,16 +1,15 @@
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { User } = require('../models/user');
 
-var createUser = (userData, onSuccess, onError) => {
-    var user = new User(userData);
+var createUser = (credentials, onSuccess, onError) => {
+    var user = new User(credentials);
     user.save().then(() => {
         return user.generateAuthToken();
     }, (e) => {
         onError(e);
     }).then((token) => {
         onSuccess(user, token);
-    });
+    }).catch((e) => { });
 };
 
 var findUserByToken = (token, onSuccess, onError) => {
@@ -33,7 +32,7 @@ var loginUser = (credentials, onSuccess, onError) => {
                     onSuccess(user, token);
                 });
             } else {
-                onError(err ? err : 'Unable to login user!');
+                onError(err ? err : { message: 'Password mismatch' });
             }
         });
     }).catch((e) => {
