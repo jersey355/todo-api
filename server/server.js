@@ -37,6 +37,14 @@ app.get('/users/me', authenticate, (req, res) => {
     res.send(req.user);
 });
 
+app.delete('/users/logout', authenticate, (req, res) => {
+    userService.logoutUser(req.user, req.token, () => {
+        res.status(200).send();
+    }, (error) => {
+        res.status(400).send(error);
+    });
+});
+
 // <<<<<<<<<< TASK ROUTES >>>>>>>>>>
 
 app.get('/tasks', (req, res) => {

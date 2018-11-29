@@ -40,8 +40,15 @@ var loginUser = (credentials, onSuccess, onError) => {
     });
 };
 
+var logoutUser = (user, token, onSuccess, onError) => {
+    user.deleteToken(token).then(() => {
+        onSuccess();
+    }).catch((e) => onError(e.message));
+};
+
 module.exports = {
     createUser,
     loginUser,
+    logoutUser,
     findUserByToken
 };
