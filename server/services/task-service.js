@@ -2,21 +2,21 @@ const _ = require('lodash');
 const { ObjectID } = require('mongodb');
 const { Task } = require('../models/task');
 
-var listTasks = (onSuccess, onError) => {
-    Task.find().then((tasks) => {
+var listTasks = (ownerId, onSuccess, onError) => {
+    Task.find({ ownerId }).then((tasks) => {
         onSuccess(tasks);
     }, (e) => {
         onError(e);
     });
 };
 
-var findTask = (id, onSuccess, onNotFound, onError) => {
+var findTask = (id, ownerId, onSuccess, onNotFound, onError) => {
 
     if (!ObjectID.isValid(id)) {
         return onError({ message: `ID [${id}] is invalid!` });
     }
 
-    Task.findOne({ _id: id }).then((task) => {
+    Task.findOne({ _id: id, ownerId }).then((task) => {
         if (task) {
             onSuccess(task);
         } else {
@@ -37,13 +37,13 @@ var createTask = (taskData, onSuccess, onError) => {
     });
 };
 
-var deleteTask = (id, onSuccess, onNotFound, onError) => {
+var deleteTask = (id, ownerId, onSuccess, onNotFound, onError) => {
 
     if (!ObjectID.isValid(id)) {
         return onError({ message: `ID [${id}] is invalid!` });
     }
 
-    Task.findOneAndDelete({ _id: id }).then((task) => {
+    Task.findOneAndDelete({ _id: id, ownerId }).then((task) => {
         if (task) {
             onSuccess(task);
         } else {
@@ -55,7 +55,7 @@ var deleteTask = (id, onSuccess, onNotFound, onError) => {
 
 };
 
-var updateTask = (id, body, onSuccess, onNotFound, onError) => {
+var updateTask = (id, ownerId, body, onSuccess, onNotFound, onError) => {
 
     if (!ObjectID.isValid(id)) {
         return onError({ message: `ID [${id}] is invalid!` });
@@ -68,7 +68,7 @@ var updateTask = (id, body, onSuccess, onNotFound, onError) => {
         body.completedAt = null;
     }
 
-    Task.findOneAndUpdate({ _id: id }, { $set: body }, { new: true }).then((task) => {
+    Task.findOneAndUpdate({ _id: id, ownerId }, { $set: body }, { new: true }).then((task) => {
         if (task) {
             onSuccess(task);
         } else {

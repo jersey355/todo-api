@@ -17,14 +17,18 @@ const users = [{
 }, {
     _id: userId2,
     email: 'user2@foo.com',
-    password: 'password2'
+    password: 'password2',
+    tokens: [{
+        access: 'auth',
+        token: jwt.sign({ _id: userId2, access: 'auth' }, 'abc123').toString()
+    }]
 }
 ];
 
 const tasks = [
-    { _id: new ObjectID(), text: 'First task' },
-    { _id: new ObjectID(), text: 'Second task' },
-    { _id: new ObjectID(), text: 'Third task', completed: true, completedAt: 333 }
+    { _id: new ObjectID(), text: 'First task', ownerId: userId1 },
+    { _id: new ObjectID(), text: 'Second task', ownerId: userId2 },
+    { _id: new ObjectID(), text: 'Third task', completed: true, completedAt: 333, ownerId: userId2 }
 ];
 
 const populateUsers = (done) => {

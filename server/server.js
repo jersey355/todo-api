@@ -47,45 +47,46 @@ app.delete('/users/me/token', authenticate, (req, res) => {
 
 // <<<<<<<<<< TASK ROUTES >>>>>>>>>>
 
-app.get('/tasks', (req, res) => {
-    taskService.listTasks(
+app.get('/tasks', authenticate, (req, res) => {
+    taskService.listTasks(req.user._id,
         (tasks) => res.send({ tasks }),
         (error) => res.status(400).send(error)
     );
 });
 
-app.get('/tasks/:id', (req, res) => {
-    var id = req.params.id;
-    taskService.findTask(id,
+app.get('/tasks/:id', authenticate, (req, res) => {
+    var taskId = req.params.id;
+    taskService.findTask(taskId, req.user._id,
         (task) => res.send({ task }),
-        () => res.status(404).send(`ID [${id}] not found!`),
+        () => res.status(404).send(`ID [${taskId}] not found!`),
         (error) => res.status(400).send(error)
     );
 });
 
-app.post('/tasks', (req, res) => {
+app.post('/tasks', authenticate, (req, res) => {
     var taskData = _.pick(req.body, ['text', 'completed', 'completedAt']);
+    taskData.ownerId = req.user._id;
     taskService.createTask(taskData,
         (task) => res.send({ task }),
         (error) => res.status(400).send(error)
     );
 });
 
-app.delete('/tasks/:id', (req, res) => {
-    var id = req.params.id;
-    taskService.deleteTask(id,
+app.delete('/tasks/:id', authenticate, (req, res) => {
+    var taskId = req.params.id;
+    taskService.deleteTask(taskId, req.user._id,
         (task) => res.send({ task }),
-        () => res.status(404).send(`ID [${id}] not found!`),
+        () => res.status(404).send(`ID [${taskId}] not found!`),
         (error) => res.status(400).send(error)
     );
 });
 
-app.patch('/tasks/:id', (req, res) => {
-    var id = req.params.id;
+app.patch('/tasks/:id', authenticate, (req, res) => {
+    var taskId = req.params.id;
     var body = _.pick(req.body, ['text', 'completed']);
-    taskService.updateTask(id, body,
+    taskService.updateTask(taskId, req.user._id, body,
         (task) => res.send({ task }),
-        () => res.status(404).send(`ID [${id}] not found!`),
+        () => res.status(404).send(`ID [${taskId}] not found!`),
         (error) => res.status(400).send(error)
     );
 });

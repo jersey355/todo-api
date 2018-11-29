@@ -82,7 +82,10 @@ describe('POST /users/login', () => {
                     done(err);
                 }
                 User.findById(users[1]._id).then((user) => {
-                    expect(user.tokens.length).toBe(1);
+                    expect(user.tokens[1]).toInclude({
+                        access: 'auth',
+                        token: res.headers['x-auth']
+                    });
                     done();
                 }).catch((e) => done(e));
 
@@ -104,7 +107,7 @@ describe('POST /users/login', () => {
                     done(err);
                 }
                 User.findById(users[1]._id).then((user) => {
-                    expect(user.tokens.length).toBe(0);
+                    expect(user.tokens.length).toBe(1);
                     done();
                 }).catch((e) => done(e));
 
@@ -167,9 +170,10 @@ describe('GET /tasks', () => {
     it('Should return a list of tasks', (done) => {
         request(app)
             .get('/tasks')
+            .set('x-auth', users[0].tokens[0].token)
             .expect(200)
             .expect((res) => {
-                expect(res.body.tasks.length).toBe(3);
+                expect(res.body.tasks.length).toBe(1);
             })
             .end(done);
     });
@@ -177,6 +181,7 @@ describe('GET /tasks', () => {
     it('Should find a task by ID', (done) => {
         request(app)
             .get(`/tasks/${tasks[0]._id.toHexString()}`)
+            .set('x-auth', users[0].tokens[0].token)
             .expect(200)
             .expect((res) => {
                 expect(res.body.task.text).toBe(tasks[0].text);
@@ -184,9 +189,18 @@ describe('GET /tasks', () => {
             .end(done);
     });
 
-    it('Should return 404', (done) => {
+    it('Should return a 404 for task owned by different user', (done) => {
+        request(app)
+            .get(`/tasks/${tasks[1]._id.toHexString()}`)
+            .set('x-auth', users[0].tokens[0].token)
+            .expect(404)
+            .end(done);
+    });
+
+    it('Should return 404 when task not found', (done) => {
         request(app)
             .get('/tasks/9bef8b6998d50e2d56d73625')
+            .set('x-auth', users[0].tokens[0].token)
             .expect(404)
             .end(done);
     });
@@ -194,6 +208,7 @@ describe('GET /tasks', () => {
     it('Should return 400', (done) => {
         request(app)
             .get('/tasks/123')
+            .set('x-auth', users[0].tokens[0].token)
             .expect(400)
             .end(done);
     });
@@ -207,6 +222,7 @@ describe('POST /tasks', () => {
 
         request(app)
             .post('/tasks')
+            .set('x-auth', users[0].tokens[0].token)
             .send({ text })
             .expect(200)
             .expect((res) => {
@@ -231,6 +247,7 @@ describe('POST /tasks', () => {
     it('Should not create task with invalid request data', (done) => {
         request(app)
             .post('/tasks')
+            .set('x-auth', users[0].tokens[0].token)
             .send({})
             .expect(400)
             .end((err, res) => {
@@ -252,19 +269,46 @@ describe('POST /tasks', () => {
 describe('DELETE /tasks', () => {
 
     it('Should delete a task by ID', (done) => {
-        var id = tasks[0]._id.toHexString();
+        var taskId = tasks[0]._id.toHexString();
         request(app)
-            .delete(`/tasks/${id}`)
+            .delete(`/tasks/${taskId}`)
+            .set('x-auth', users[0].tokens[0].token)
             .expect(200)
             .expect((res) => {
-                expect(res.body.task._id).toBe(id);
+                expect(res.body.task._id).toBe(taskId);
             })
-            .end(done);
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+                Task.findById(taskId).then((task) => {
+                    expect(task).toNotExist();
+                    done();
+                }).catch((e) => done(e));
+            });
+    });
+
+    it('Should NOT delete a task owned by different user', (done) => {
+        var taskId = tasks[1]._id.toHexString();
+        request(app)
+            .delete(`/tasks/${taskId}`)
+            .set('x-auth', users[0].tokens[0].token)
+            .expect(404)
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+                Task.findById(taskId).then((task) => {
+                    expect(task).toExist(); // target task should still exist
+                    done();
+                }).catch((e) => done(e));
+            });
     });
 
     it('Should return 404', (done) => {
         request(app)
             .delete('/tasks/9bef8b6998d50e2d56d73625')
+            .set('x-auth', users[0].tokens[0].token)
             .expect(404)
             .end(done);
     });
@@ -272,6 +316,7 @@ describe('DELETE /tasks', () => {
     it('Should return 400', (done) => {
         request(app)
             .delete('/tasks/123')
+            .set('x-auth', users[0].tokens[0].token)
             .expect(400)
             .end(done);
     });
@@ -285,6 +330,7 @@ describe('PATCH /tasks', () => {
         var text = 'Make some widgets';
         request(app)
             .patch(`/tasks/${id}`)
+            .set('x-auth', users[0].tokens[0].token)
             .send({ completed: true, text })
             .expect(200)
             .expect((res) => {
@@ -295,11 +341,21 @@ describe('PATCH /tasks', () => {
             .end(done);
     });
 
-    it('Should clear task completed flag', (done) => {
-        var id = tasks[2]._id.toHexString();
-        var text = 'Make some widgets';
+    it('Should NOT set task owned by other user to completed', (done) => {
+        var id = tasks[1]._id.toHexString();
         request(app)
             .patch(`/tasks/${id}`)
+            .set('x-auth', users[0].tokens[0].token)
+            .send({ completed: true })
+            .expect(404)
+            .end(done);
+    });
+
+    it('Should clear task completed flag', (done) => {
+        var id = tasks[2]._id.toHexString();
+        request(app)
+            .patch(`/tasks/${id}`)
+            .set('x-auth', users[1].tokens[0].token)
             .send({ completed: false })
             .expect(200)
             .expect((res) => {
@@ -309,16 +365,18 @@ describe('PATCH /tasks', () => {
             .end(done);
     });
 
-    it('Should return 404', (done) => {
+    it('Should return 404 for valid task ID not found', (done) => {
         request(app)
-            .delete('/tasks/9bef8b6998d50e2d56d73625')
+            .patch('/tasks/9bef8b6998d50e2d56d73625')
+            .set('x-auth', users[0].tokens[0].token)
             .expect(404)
             .end(done);
     });
 
-    it('Should return 400', (done) => {
+    it('Should return 400 on validation error', (done) => {
         request(app)
-            .delete('/tasks/123')
+            .patch('/tasks/123')
+            .set('x-auth', users[0].tokens[0].token)
             .expect(400)
             .end(done);
     });
