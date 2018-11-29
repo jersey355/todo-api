@@ -19,8 +19,8 @@ describe('POST /users', () => {
             .send({ email, password })
             .expect(200)
             .expect((res) => {
-                expect(res.headers['x-auth']).toExist();
-                expect(res.body.user._id).toExist();
+                expect(res.headers['x-auth']).toBeTruthy();
+                expect(res.body.user._id).toBeTruthy();
                 expect(res.body.user.email).toBe(email);
             })
             .end((err, res) => {
@@ -73,8 +73,8 @@ describe('POST /users/login', () => {
             .send({ email, password })
             .expect(200)
             .expect((res) => {
-                expect(res.headers['x-auth']).toExist();
-                expect(res.body.user._id).toExist();
+                expect(res.headers['x-auth']).toBeTruthy();
+                expect(res.body.user._id).toBeTruthy();
                 expect(res.body.user.email).toBe(email);
             })
             .end((err, res) => {
@@ -82,7 +82,7 @@ describe('POST /users/login', () => {
                     done(err);
                 }
                 User.findById(users[1]._id).then((user) => {
-                    expect(user.tokens[1]).toInclude({
+                    expect(user.toObject().tokens[1]).toMatchObject({
                         access: 'auth',
                         token: res.headers['x-auth']
                     });
@@ -99,7 +99,7 @@ describe('POST /users/login', () => {
             .send({ email, password: `${users[1].password}NOT!` })
             .expect(400)
             .expect((res) => {
-                expect(res.headers['x-auth']).toNotExist();
+                expect(res.headers['x-auth']).toBeFalsy();
                 expect(res.body.message).toBe('Password mismatch');
             })
             .end((err, res) => {
@@ -282,7 +282,7 @@ describe('DELETE /tasks', () => {
                     return done(err);
                 }
                 Task.findById(taskId).then((task) => {
-                    expect(task).toNotExist();
+                    expect(task).toBeFalsy();
                     done();
                 }).catch((e) => done(e));
             });
@@ -299,7 +299,7 @@ describe('DELETE /tasks', () => {
                     return done(err);
                 }
                 Task.findById(taskId).then((task) => {
-                    expect(task).toExist(); // target task should still exist
+                    expect(task).toBeTruthy(); // target task should still exist
                     done();
                 }).catch((e) => done(e));
             });
@@ -336,7 +336,7 @@ describe('PATCH /tasks', () => {
             .expect((res) => {
                 expect(res.body.task.text).toBe(text);
                 expect(res.body.task.completed).toBe(true);
-                expect(res.body.task.completedAt).toBeA('number');
+                expect(typeof res.body.task.completedAt).toBe('number');
             })
             .end(done);
     });
