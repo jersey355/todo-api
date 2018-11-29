@@ -37,8 +37,8 @@ app.get('/users/me', authenticate, (req, res) => {
     res.send(req.user);
 });
 
-app.delete('/users/logout', authenticate, (req, res) => {
-    userService.logoutUser(req.user, req.token, () => {
+app.delete('/users/me/token', authenticate, (req, res) => {
+    userService.deleteUserToken(req.user, req.token, () => {
         res.status(200).send();
     }, (error) => {
         res.status(400).send(error);

@@ -3,10 +3,115 @@ const request = require('supertest');
 
 const { app } = require('../server');
 const { users, tasks, populateUsers, populateTasks } = require('./seed/seed');
+const { User } = require('../models/user');
 const { Task } = require('../models/task');
 
-before(populateUsers);
+beforeEach(populateUsers);
 beforeEach(populateTasks);
+
+describe('POST /users', () => {
+
+    it('Should create a new user', (done) => {
+        var email = 'john.doe@foo.com';
+        var password = 'password123!';
+        request(app)
+            .post('/users')
+            .send({ email, password })
+            .expect(200)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toExist();
+                expect(res.body.user._id).toExist();
+                expect(res.body.user.email).toBe(email);
+            })
+            .end((err, res) => {
+                if (err) {
+                    done(err);
+                }
+                User.findOne({ email }).then((user) => {
+                    expect(user.tokens.length).toBeGreaterThan(0);
+                    done();
+                }).catch((e) => done(e));
+
+            });
+    });
+
+    it('Should return validation errors on invalid email', (done) => {
+        var email = 'john.doe'; // invalid email address
+        request(app)
+            .post('/users')
+            .send({ email, password: 'password123!' })
+            .expect(400)
+            .expect((res) => {
+                expect(res.body.name).toBe("ValidationError");
+                expect(res.body.message).toBe(`User validation failed: email: ${email} is not a valid email!`);
+            })
+            .end(done);
+    });
+
+    it('Should not create a new user if email already exists', (done) => {
+        var email =
+            request(app)
+                .post('/users')
+                .send({ email: users[1].email, password: 'password123!' })
+                .expect(400)
+                .expect((res) => {
+                    expect(res.body.name).toBe("MongoError");
+                    expect(res.body.code).toBe(11000); // duplicate error code
+                })
+                .end(done);
+    });
+
+});
+
+describe('POST /users/login', () => {
+
+    it('Should receive a token after on successful login', (done) => {
+        var email = users[1].email;
+        var password = users[1].password;
+        request(app)
+            .post('/users/login')
+            .send({ email, password })
+            .expect(200)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toExist();
+                expect(res.body.user._id).toExist();
+                expect(res.body.user.email).toBe(email);
+            })
+            .end((err, res) => {
+                if (err) {
+                    done(err);
+                }
+                User.findById(users[1]._id).then((user) => {
+                    expect(user.tokens.length).toBe(1);
+                    done();
+                }).catch((e) => done(e));
+
+            });
+    });
+
+    it('Should receive an error on login failure', (done) => {
+        var email = users[1].email;
+        request(app)
+            .post('/users/login')
+            .send({ email, password: `${users[1].password}NOT!` })
+            .expect(400)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toNotExist();
+                expect(res.body.message).toBe('Password mismatch');
+            })
+            .end((err, res) => {
+                if (err) {
+                    done(err);
+                }
+                User.findById(users[1]._id).then((user) => {
+                    expect(user.tokens.length).toBe(0);
+                    done();
+                }).catch((e) => done(e));
+
+            });
+    });
+
+});
 
 describe('GET /users/me', () => {
 
@@ -34,84 +139,25 @@ describe('GET /users/me', () => {
 
 });
 
-describe('POST /users', () => {
+describe('DELETE /users/me/token', () => {
 
-    it('Should create a new user', (done) => {
-
-        var email = 'john.doe@foo.com';
-        var password = 'password123!';
-
+    it('Should delete the user token', (done) => {
+        var token = users[0].tokens[0].token;
         request(app)
-            .post('/users')
-            .send({ email, password })
+            .delete('/users/me/token')
+            .set('x-auth', token)
+            .send()
             .expect(200)
-            .expect((res) => {
-                expect(res.headers['x-auth']).toExist();
-                expect(res.body.user._id).toExist();
-                expect(res.body.user.email).toBe(email);
-            })
-            .end(done);
+            .end((err, res) => {
+                if (err) {
+                    done(err);
+                }
+                User.findById(users[0]._id).then((user) => {
+                    expect(user.tokens.length).toBe(0);
+                    done();
+                }).catch((e) => done(e));
 
-    });
-
-    it('Should return validation errors on invalid email', (done) => {
-
-        var email = 'john.doe'; // invalid email address
-
-        request(app)
-            .post('/users')
-            .send({ email, password: 'password123!' })
-            .expect(400)
-            .expect((res) => {
-                expect(res.body.name).toBe("ValidationError");
-                expect(res.body.message).toBe(`User validation failed: email: ${email} is not a valid email!`);
-            })
-            .end(done);
-
-    });
-
-    it('Should not create a new user if email already exists', (done) => {
-        request(app)
-            .post('/users')
-            .send({ email: 'john.doe@foo.com', password: 'password123!' })
-            .expect(400)
-            .expect((res) => {
-                expect(res.body.name).toBe("MongoError");
-                expect(res.body.code).toBe(11000); // duplicate error code
-            })
-            .end(done);
-    });
-
-});
-
-describe('POST /users/logn', () => {
-
-    it('Should receive a token after on successful login', (done) => {
-        var email = users[1].email;
-        var password = users[1].password;
-        request(app)
-            .post('/users/login')
-            .send({ email, password })
-            .expect(200)
-            .expect((res) => {
-                expect(res.headers['x-auth']).toExist();
-                expect(res.body.user._id).toExist();
-                expect(res.body.user.email).toBe(email);
-            })
-            .end(done);
-    });
-
-    it('Should receive an error on login failure', (done) => {
-        var email = users[1].email;
-        request(app)
-            .post('/users/login')
-            .send({ email, password: `${users[1].password}NOT!` })
-            .expect(400)
-            .expect((res) => {
-                expect(res.headers['x-auth']).toNotExist();
-                expect(res.body.message).toBe('Password mismatch');
-            })
-            .end(done);
+            });
     });
 
 });

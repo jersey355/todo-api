@@ -48,7 +48,7 @@ UserSchema.methods.generateAuthToken = function () {
 
 UserSchema.methods.deleteToken = function (token) {
     var user = this;
-    return user.update({
+    return user.updateOne({
         $pull: { tokens: { token } }
     });
 };
